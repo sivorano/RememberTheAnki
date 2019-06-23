@@ -71,7 +71,7 @@ def ReadLineFromFile(InFile):
     with open(InFile, 'w') as deamonIn:
         if len(lines) > 0:
             deamonIn.writelines(lines[1:])
-            return lines[0]
+            return lines[0].rstrip()
         else:
             deamonIn.writelines([""])
     raise Exception("No lines to read")

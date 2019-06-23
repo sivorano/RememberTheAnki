@@ -9,7 +9,8 @@ import time
 import os,glob
 import fileinput
 import logging
-import threading
+#import threading
+import multiprocessing 
 import time
 import socket
 from contextlib import closing
@@ -54,21 +55,47 @@ def WriteToDaemon(ToWrite):
     deamonIn.close()
     return 1
 
-def ReadLinesFromDaemon():
+def WriteFromDaemon(ToWrite):
+    """
+    Writes ToWrite from the Deamon to StdOut.
+    """
+    print(ToWrite,flush = True)
+    return 1
+
+def ReadLineFromFile(InFile):
     """
     Reads one line from the demons, and removes this line
     """
-    with open(SUB_OUTPUT_FILΕ,"r") as deamonIn:
+    with open(InFile,"r") as deamonIn:
         lines = deamonIn.readlines()
-    with open(SUB_OUTPUT_FILΕ, 'w') as demonIn:
+    with open(InFile, 'w') as deamonIn:
         if len(lines) > 0:
-            demonIn.writelines(lines[1:])
+            deamonIn.writelines(lines[1:])
+            return lines[0]
         else:
-            demonIn.writelines([""])
-        #FIXME: Should handle removing the line
-    return lines[0]
+            deamonIn.writelines([""])
+    raise Exception("No lines to read")
 
+def ReadLineFromDaemon(ToWrite,Trytime = 3):
+    """
+    """
+    Read = ""
+    ReadSomething = False
+    def readThreadFun():
+        """
+        Tries to read from stdin.
+        """
+        temp = sys.stdin.readline()
+        Read = temp
+        ReadSomething = True
+    
+    readProcess = multiprocessing.Process(target = readThreadFun)
+    readProcess.start()
+    time.sleep(Trytime)
+    readProcess.terminate()
+    return (Read,ReadSomething)
 
+    
 def PingDaemon():
     """
     """

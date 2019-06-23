@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-
-
 import sys
 import socket
 from anki import Collection
@@ -17,13 +15,17 @@ import socket
 from contextlib import closing
 import subprocess
 
+#Constants
+
+
 BUFFER_SIZE = 1024
 
 #The files from which the deamon will take its input and write its output
-SUB_INPUT_FILΕ = "RememberTheAnkiFiles/Input"
+SUB_INPUT_FILE = "RememberTheAnkiFiles/Input"
 SUB_OUTPUT_FILΕ = "RememberTheAnkiFiles/Output"
 
 
+#Maybe remove
 def findFreePort():
     """
     returns an usnused port, see 
@@ -35,6 +37,7 @@ def findFreePort():
         return s.getsockname()[1]
 
 
+
 def RecieveStdInInput():
     """
     Check if there is input from StdIn. Returns this input as an list.
@@ -42,10 +45,38 @@ def RecieveStdInInput():
     args = []
     return sys.argv
 
+def WriteToDaemon(ToWrite):
+    """
+    Writes ToWrite to the Deamons input file.
+    """
+    deamonIn = open(SUB_INPUT_FILE,"w")
+    deamonIn.write(ToWrite)
+    deamonIn.close()
+    return 1
+
+def ReadLinesFromDaemon():
+    """
+    Reads one line from the demons, and removes this line
+    """
+    with open(SUB_OUTPUT_FILΕ,"r") as deamonIn:
+        lines = deamonIn.readlines()
+    with open(SUB_OUTPUT_FILΕ, 'w') as demonIn:
+        if len(lines) > 0:
+            demonIn.writelines(lines[1:])
+        else:
+            demonIn.writelines([""])
+        #FIXME: Should handle removing the line
+    return lines[0]
+
+
+def PingDaemon():
+    """
+    """
+    ()
 
 def StartCheckerDaemon(args):
     """
-    Stats the background Deamon, which will handle 
+    Starts the background Deamon, which will do the actual work.
     """
     subprocess.Popen([sys.executable,
                       args[0],
@@ -53,8 +84,19 @@ def StartCheckerDaemon(args):
                      stdin = open(SUB_INPUT_FILΕ,"r"),
                      stdout = open(SUB_OUTPUT_FILΕ,"w"))
     
+def CloseCheckerDaemon():
+    """
+    Closes the background daemon.
+    """
+    #Send to 
+    ()
 
+
+    
 def HandleInput(args):
+    """
+    Handles the input, depending on 
+    """
     if len(args) <= 1:
         print ("ERROR: Program needs atleast 1 argument, eg startup")
         return 0
@@ -64,6 +106,7 @@ def HandleInput(args):
         return 1
     elif args[1] == "internal-startup":
         time.sleep(10)
+        #Start the main loop
         print("Internal-startup initialized")
         return 1
     elif args[1] == "close":
@@ -79,35 +122,16 @@ def HandleInput(args):
         return 0
     
 
-if __name__ == "__main__":
-    # We start by finding the input arguments
-
-    InputArgs = RecieveStdInInput()
-    print(InputArgs)
-    reactionCode = HandleInput(InputArgs)
-
-    if reactionCode == 0:
-        sys.exit()
-    sys.exit()
-
-
-
-# def thread_function(name):
-#     logging.info("Thread %s: starting", name)
-#     time.sleep(2)
-#     logging.info("Thread %s: finishing", name)
-
 # if __name__ == "__main__":
-#     format = "%(asctime)s: %(message)s"
-#     logging.basicConfig(format=format, level=logging.INFO,
-#                         datefmt="%H:%M:%S")
+#     # We start by finding the input arguments
 
-#     logging.info("Main    : before creating thread")
-#     x = threading.Thread(target=thread_function, args=(1,))
-#     logging.info("Main    : before running thread")
-#     x.start()
-#     logging.info("Main    : wait for the thread to finish")
-#     x.join()
-#     logging.info("Main    : all done")
+#     InputArgs = RecieveStdInInput()
+#     print(InputArgs)
+#     reactionCode = HandleInput(InputArgs)
+
+#     if reactionCode == 0:
+#         sys.exit()
+#     sys.exit()
+
 
 

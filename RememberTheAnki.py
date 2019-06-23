@@ -19,6 +19,10 @@ import subprocess
 
 BUFFER_SIZE = 1024
 
+#The files from which the deamon will take its input and write its output
+SUB_INPUT_FILΕ = "RememberTheAnkiFiles/Input"
+SUB_OUTPUT_FILΕ = "RememberTheAnkiFiles/Output"
+
 
 def findFreePort():
     """
@@ -38,30 +42,17 @@ def RecieveStdInInput():
     args = []
     return sys.argv
 
-def DumThread():
-    while True:
-        time.sleep(2)
 
-
-
-
-def StartBackgroundServer(portId):
+def StartCheckerDaemon(args):
     """
-    Starts the background server, which checks 
+    Stats the background Deamon, which will handle 
     """
-    def ServerThread(portId):
-        s = socket.socket(socket.AF_INET,SOCK_STREAM)
-        s.bind(("127.0.0.1",portId))
-
-        while True:
-            s.listen(1)
-            conn,addr = s.accept()
-            while True:
-                data = conn.recv(BUFFER_SIZE)
-                if not data: break
-                #print ("received data:", data)
-                conn.send(data)  # echo    ()
-            
+    subprocess.Popen([sys.executable,
+                      args[0],
+                      "internal-startup"],
+                     stdin = open(SUB_INPUT_FILΕ,"r"),
+                     stdout = open(SUB_OUTPUT_FILΕ,"w"))
+    
 
 def HandleInput(args):
     if len(args) <= 1:
@@ -69,6 +60,11 @@ def HandleInput(args):
         return 0
     elif args[1] == "startup":
         print("Runing startup")
+        StartCheckerDaemon(args)
+        return 1
+    elif args[1] == "internal-startup":
+        time.sleep(10)
+        print("Internal-startup initialized")
         return 1
     elif args[1] == "close":
         return 1
@@ -92,6 +88,7 @@ if __name__ == "__main__":
 
     if reactionCode == 0:
         sys.exit()
+    sys.exit()
 
 
 

@@ -76,7 +76,7 @@ def ReadLineFromFile(InFile):
             deamonIn.writelines([""])
     raise Exception("No lines to read")
 
-def ReadLineFromDaemon(ToWrite,Trytime = 3):
+def ReadLineFromDaemon(ToWrite,Trytime = 10):
     """
     """
     Read = ""
@@ -115,11 +115,33 @@ def CloseCheckerDaemon():
     """
     Closes the background daemon.
     """
-    #Send to 
+    WriteToDaemon("EXIT")
+
+def CheckFiles():
+    #raise Exception("Not implemented")
     ()
-
-
     
+def FileCheckerLoop(StartTime,SleepTime = 3600):
+    CheckFiles()
+    while True:
+        time.sleep(SleepTime)
+        CheckFiles()
+
+
+
+def DeamonMainLoop():
+    """
+    
+    """
+    import datetime
+    #from dateutil.relativedelta import relativedelta
+    START_TIME = datetime.datetime.now()
+    CheckerProcess = multiprocessing.Process(target = FileCheckerLoop)
+    CheckerProcess.start()
+    while True:
+        line = sys.stdin.readline()
+        #DeamonHandleInput(line)
+        
 def HandleInput(args):
     """
     Handles the input, depending on 
@@ -135,6 +157,7 @@ def HandleInput(args):
         time.sleep(10)
         #Start the main loop
         print("Internal-startup initialized")
+        print("ERROR: implement daemon")
         return 1
     elif args[1] == "close":
         return 1

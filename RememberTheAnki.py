@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-import socket
 from anki import Collection
 from shutil import copyfile,rmtree
 from anki.utils import intTime
@@ -12,7 +11,6 @@ import logging
 #import threading
 import multiprocessing 
 import time
-import socket
 from contextlib import closing
 import subprocess
 
@@ -24,18 +22,6 @@ BUFFER_SIZE = 1024
 #The files from which the deamon will take its input and write its output
 SUB_INPUT_FILE = "RememberTheAnkiFiles/Input"
 SUB_OUTPUT_FILΕ = "RememberTheAnkiFiles/Output"
-
-
-#Maybe remove
-def findFreePort():
-    """
-    returns an usnused port, see 
-    https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number
-    """
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind(('localhost', 0))
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return s.getsockname()[1]
 
 
 
@@ -108,7 +94,7 @@ def StartCheckerDaemon(args):
     subprocess.Popen([sys.executable,
                       args[0],
                       "internal-startup"],
-                     stdin = open(SUB_INPUT_FILΕ,"r"),
+                     stdin = open(SUB_INPUT_FILE,"r"),
                      stdout = open(SUB_OUTPUT_FILΕ,"w"))
     
 def CloseCheckerDaemon():
@@ -119,6 +105,7 @@ def CloseCheckerDaemon():
 
 def CheckFiles():
     #raise Exception("Not implemented")
+    
     ()
     
 def FileCheckerLoop(StartTime,SleepTime = 3600):
@@ -155,9 +142,15 @@ def HandleInput(args):
         return 1
     elif args[1] == "internal-startup":
         time.sleep(10)
+        logging.basicConfig(level=logging.DEBUG,filename = "RememberTheAnkiFiles/Log")
+        logging.debug('This will get logged')
+
+        logging.info("Internal-startup initialized")
+        print("This is a test")
+
         #Start the main loop
-        print("Internal-startup initialized")
-        print("ERROR: implement daemon")
+        
+        logging.error("Implement Daemon")
         return 1
     elif args[1] == "close":
         return 1
@@ -172,16 +165,16 @@ def HandleInput(args):
         return 0
     
 
-# if __name__ == "__main__":
-#     # We start by finding the input arguments
+if __name__ == "__main__":
+    # We start by finding the input arguments
 
-#     InputArgs = RecieveStdInInput()
-#     print(InputArgs)
-#     reactionCode = HandleInput(InputArgs)
+    InputArgs = RecieveStdInInput()
+    print(InputArgs)
+    reactionCode = HandleInput(InputArgs)
 
-#     if reactionCode == 0:
-#         sys.exit()
-#     sys.exit()
+    if reactionCode == 0:
+        print("An error occured.")
+    sys.exit()
 
 
 

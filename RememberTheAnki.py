@@ -131,7 +131,9 @@ def hashCalculator(filename):
     return digest
 
 def CheckFiles(fileToCheck,memory = {}):
-    
+    """
+    comment
+    """
     ()
     
 def FileCheckerLoop(StartTime,fileToCheck,SleepTime = 3600):

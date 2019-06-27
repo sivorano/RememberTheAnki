@@ -14,6 +14,8 @@ import time
 from contextlib import closing
 import subprocess
 
+import hashlib
+
 #Constants
 
 
@@ -22,7 +24,12 @@ BUFFER_SIZE = 1024
 #The files from which the deamon will take its input and write its output
 SUB_INPUT_FILE = "RememberTheAnkiFiles/Input"
 SUB_OUTPUT_FILΕ = "RememberTheAnkiFiles/Output"
-
+MESSAGE_TYPES = {"deamon close" :
+                 """DEAMON EXIT
+                 """,
+                 "deamon closing" : "MESSAGE:DEAMON EXITING\n",
+                 "deamon ping" : "DEAMON PING:\n",
+                 "deamon pingback" : "DEAMON PINGBACK\n"}
 
 
 def RecieveStdInInput():
@@ -41,12 +48,17 @@ def WriteToDaemon(ToWrite):
     deamonIn.close()
     return 1
 
-def WriteFromDaemon(ToWrite):
+def WriteFromDaemon(ToWrite, brute = True):
     """
     Writes ToWrite from the Deamon to StdOut.
     """
-    print(ToWrite,flush = True)
+    if brute:
+        with open(SUB_OUTPUT_FILΕ,"w") as daemonOut:
+            daemonOut.write(ToWrite)
+    else:
+        print(ToWrite,flush = True)
     return 1
+
 
 def ReadLineFromFile(InFile):
     """
@@ -93,40 +105,68 @@ def StartCheckerDaemon(args):
     """
     subprocess.Popen([sys.executable,
                       args[0],
-                      "internal-startup"],
-                     stdin = open(SUB_INPUT_FILE,"r"),
-                     stdout = open(SUB_OUTPUT_FILΕ,"w"))
+                      "internal-startup"]#,
+                     #stdin = open(SUB_INPUT_FILE,"r"),
+                     #stdout = open(SUB_OUTPUT_FILΕ,"w")
+    )
     
 def CloseCheckerDaemon():
     """
     Closes the background daemon.
     """
-    WriteToDaemon("EXIT")
+    WriteToDaemon(MESSAGE_TYPES["deamon close"])
 
-def CheckFiles():
-    #raise Exception("Not implemented")
+
+def hashCalculator(filename):
+    """
+    Calculates the sha 256 hash of a file.
+    Taken from https://www.quickprogrammingtips.com/python/how-to-calculate-sha256-hash-of-a-file-in-python.html
+    """
+    sha256_hash = hashlib.sha256()
+    with open(filename,"rb") as f:
+    # Read and update hash string value in blocks of 4K
+        for byte_block in iter(lambda: f.read(4096),b""):
+            sha256_hash.update(byte_block)
+        digest = sha256_hash.hexdigest()
+    return digest
+
+def CheckFiles(fileToCheck,memory = {}):
     
     ()
     
-def FileCheckerLoop(StartTime,SleepTime = 3600):
-    CheckFiles()
+def FileCheckerLoop(StartTime,fileToCheck,SleepTime = 3600):
+    memory = {}
+    CheckFiles(fileToCheck)
     while True:
         time.sleep(SleepTime)
-        CheckFiles()
+        CheckFiles(fileToCheck)
 
 
 
+#FIXME: We want to implement better multiprocessing features using .join
 def DeamonMainLoop():
     """
-    
+    Runs the main loop of the deamon checker process.    
     """
     import datetime
     #from dateutil.relativedelta import relativedelta
     START_TIME = datetime.datetime.now()
-    CheckerProcess = multiprocessing.Process(target = FileCheckerLoop)
+    CheckerProcess = multiprocessing.Process(target = FileCheckerLoop,args = (START_TIME,"",3600))
+    CheckerProcess.daemon = True #Then it closes if this process closes.
     CheckerProcess.start()
+    WriteFromDaemon("Checker started")
+    
+    sys.exit()
     while True:
-        line = sys.stdin.readline()
+        #logging.debug('DEAMON LOOP: reading')
+        line = sys.stdin.readline().rstrip()
+        #logging.debug('DEAMON LOOP: read')
+        if line == MESSAGE_TYPES["deamon close"]:
+            print(MESSAGE_TYPES["deamon closing"],flush = True)
+            sys.exit()
+            print("ERROR: Loop didn't close",flush = True)
+        else:
+            print("ERROR: unidentified input")
         #DeamonHandleInput(line)
         
 def HandleInput(args):
@@ -141,13 +181,19 @@ def HandleInput(args):
         StartCheckerDaemon(args)
         return 1
     elif args[1] == "internal-startup":
-        time.sleep(10)
-        logging.basicConfig(level=logging.DEBUG,filename = "RememberTheAnkiFiles/Log")
-        logging.debug('This will get logged')
+        #time.sleep(3)
+        print("Internal-startup worked")
+        # logging.basicConfig(level=logging.DEBUG,filename = "RememberTheAnkiFiles/Log")
+        # logging.debug('This will get logged')
 
-        logging.info("Internal-startup initialized")
+        # logging.info("Internal-startup initialized")
         print("This is a test")
+        WriteFromDaemon("This went well")
+        
+        with open(SUB_INPUT_FILE,"r") as my_stdin:
+            ()
 
+            #DeamonMainLoop()
         #Start the main loop
         
         logging.error("Implement Daemon")
@@ -169,7 +215,7 @@ if __name__ == "__main__":
     # We start by finding the input arguments
 
     InputArgs = RecieveStdInInput()
-    print(InputArgs)
+    #print(InputArgs)
     reactionCode = HandleInput(InputArgs)
 
     if reactionCode == 0:

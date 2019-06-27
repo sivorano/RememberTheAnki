@@ -19,12 +19,17 @@ import time
 import socket
 from contextlib import closing
 import RememberTheAnki
+import RememberTheAnki as rta
 
 
 def test_HandleInput():
     assert(RememberTheAnki.HandleInput([]) == 0)
     assert(RememberTheAnki.HandleInput(["ThisShouldGive0"]) == 0)
 
+def test_MainLoop():
+    rta.HandleInput(["startup"])
+    rta.WriteToDaemon(rta.MESSAGE_TYPES["deamon close"])
+    time.sleep(3)
 
 def test_WriterAndReader():
     textToWrite = "Hej med\n dig"
@@ -39,3 +44,5 @@ def test_WriterAndReader():
     except:
         errorVal = True
     assert(errorVal == True)
+
+    

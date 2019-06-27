@@ -30,7 +30,9 @@ MESSAGE_TYPES = {"deamon close" :
                  "deamon closing" : "MESSAGE:DEAMON EXITING\n",
                  "deamon ping" : "DEAMON PING:\n",
                  "deamon pingback" : "DEAMON PINGBACK\n"}
-
+LOCAL_COPY = "RTA_COL_COPY.anki2"
+LOCAL_COPY_ROOT = "RTA_COL_COPY"
+TEST_DECKNAMES = ["日本語::My true immersion deck"]
 
 def RecieveStdInInput():
     """
@@ -94,10 +96,6 @@ def ReadLineFromDaemon(ToWrite,Trytime = 10):
     return (Read,ReadSomething)
 
     
-def PingDaemon():
-    """
-    """
-    ()
 
 def StartCheckerDaemon(args):
     """
@@ -130,18 +128,70 @@ def hashCalculator(filename):
         digest = sha256_hash.hexdigest()
     return digest
 
-def CheckFiles(fileToCheck,memory = {}):
+
+def ReadCollectionCounts(path,deckNames):
+    col = Collection(path)
+    deckIds = {}
+    for key, value in col.decks.decks.items():
+        if value["name"] in deckNames:
+            #print(value)
+            deckIds[value["name"]] = value["id"]
+
+    stat = col.stats()
+    counts = 0
+    for name,deckId in deckIds.items():
+        cardsRes = stat.col.db.all(
+            """
+            SELECT :today,due,* FROM cards 
+            WHERE due < :today 
+            AND did = :id
+            AND reps != 0
+            """ % (), today = stat.col.sched.today, id = deckId)
+        #stat.col.db.all(""" PRAGMA table_info(cards);""")
+    counts = len(cardsRes) + counts
+    return counts
+
+
+
+def CheckFiles(fileToCheck,deckNames,memory = {}):
     """
     comment
     """
-    ()
+    hashOfCol = hashCalculator(fileToCheck)
+    if hashOfCol in memory:
+        return (memory[hashOfCol],memory)
+    else:
+        #We remove any exess files
+        if os.path.exists(LOCAL_COPY_ROOT + ".media"):
+            rmtree(LOCAL_COPY_ROOT + ".media")
+        for filename in glob.glob(LOCAL_COPY_ROOT + '*') :
+            os.remove(filename)
+
+        #We create a local copy
+        copyfile(fileToCheck,LOCAL_COPY)
+        
+        counts = ReadCollectionCounts(LOCAL_COPY,deckNames)
+        memory[hashOfCol] = counts
+        return (counts,memory)
+
+def CloseWIFI():
+    print("please implement close wifi")
     
-def FileCheckerLoop(StartTime,fileToCheck,SleepTime = 3600):
+def FileCheckerLoop(StartTime,fileToCheck,deckNames,limit = 0,SleepTime = 3600):
+
     memory = {}
-    CheckFiles(fileToCheck)
+    counts,nmemory = CheckFiles(fileToCheck)
+    memory = nmemory
+    if counts > limit:
+        CloseWIFI()
+    
     while True:
         time.sleep(SleepTime)
-        CheckFiles(fileToCheck)
+
+        counts, nmemory  = CheckFiles(LOCAL_COPY,deckNames,memory)
+        memory = nmemory
+        if counts > limit:
+            CloseWIFI()
 
 
 

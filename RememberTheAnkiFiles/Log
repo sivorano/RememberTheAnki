@@ -1,3 +1,11 @@
 DEBUG:root:This will get logged
 INFO:root:Internal-startup initialized
+DEBUG:root:This will get logged
+INFO:root:Internal-startup initialized
+ERROR:root:Implement Daemon
+DEBUG:root:This will get logged
+INFO:root:Internal-startup initialized
+ERROR:root:Implement Daemon
+DEBUG:root:This will get logged
+INFO:root:Internal-startup initialized
 ERROR:root:Implement Daemon

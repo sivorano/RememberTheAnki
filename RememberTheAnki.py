@@ -13,7 +13,7 @@ import multiprocessing
 import time
 from contextlib import closing
 import subprocess
-
+import platform
 import hashlib
 
 #Constants
@@ -24,15 +24,14 @@ BUFFER_SIZE = 1024
 #The files from which the deamon will take its input and write its output
 SUB_INPUT_FILE = "RememberTheAnkiFiles/Input"
 SUB_OUTPUT_FILΕ = "RememberTheAnkiFiles/Output"
-MESSAGE_TYPES = {"deamon close" :
-                 """DEAMON EXIT
-                 """,
-                 "deamon closing" : "MESSAGE:DEAMON EXITING\n",
-                 "deamon ping" : "DEAMON PING:\n",
-                 "deamon pingback" : "DEAMON PINGBACK\n"}
 LOCAL_COPY = "RTA_COL_COPY.anki2"
 LOCAL_COPY_ROOT = "RTA_COL_COPY"
-TEST_DECKNAMES = ["日本語::My true immersion deck"]
+#TEST_DECKNAMES = ["日本語::My true immersion deck"]
+TEST_DECKNAMES = "日本語"
+TEST_FILETOCHECK = "/home/anders/.local/share/Anki2/User 1/collection.anki2"
+WINDOWS_CLOSE_WIFI_COMMAND = "netsh interface set interface Wi-Fi disable"
+WINDOWS_OPEN_WIFI_COMMAND = "netsh interface set interface Wi-Fi enable"
+
 
 def RecieveStdInInput():
     """
@@ -112,16 +111,20 @@ def hashCalculator(filename):
     return digest
 
 
-def ReadCollectionCounts(path,deckNames):
+def ReadCollectionCounts(path,deckName):
     col = Collection(path)
     deckIds = {}
     for key, value in col.decks.decks.items():
-        if value["name"] in deckNames:
-            #print(value)
+        #print("Deck id -> " + value["name"])
+        if value["name"] == deckName or value["name"].startswith(deckName): #::
             deckIds[value["name"]] = value["id"]
-
+            print(value["name"])
+    for value in deckIds.values():
+        ()        
+	#print(value)
     stat = col.stats()
     counts = 0
+    cardsRes = []
     for name,deckId in deckIds.items():
         cardsRes = stat.col.db.all(
             """
@@ -131,7 +134,8 @@ def ReadCollectionCounts(path,deckNames):
             AND reps != 0
             """ % (), today = stat.col.sched.today, id = deckId)
         #stat.col.db.all(""" PRAGMA table_info(cards);""")
-    counts = len(cardsRes) + counts
+        print("%s - %s" % (len(cardsRes),name))
+        counts = len(cardsRes) + counts
     return counts
 
 
@@ -142,9 +146,12 @@ def CheckFiles(fileToCheck,deckNames,memory = {}):
     """
     hashOfCol = hashCalculator(fileToCheck)
     if hashOfCol in memory:
+        print("Hash was in memory")
         return (memory[hashOfCol],memory)
     else:
         #We remove any exess files
+        print("Hash was not in memory")
+
         if os.path.exists(LOCAL_COPY_ROOT + ".media"):
             rmtree(LOCAL_COPY_ROOT + ".media")
         for filename in glob.glob(LOCAL_COPY_ROOT + '*') :
@@ -157,25 +164,50 @@ def CheckFiles(fileToCheck,deckNames,memory = {}):
         memory[hashOfCol] = counts
         return (counts,memory)
 
+def IsOnWIFI():
+    ()
+
 def CloseWIFI():
-    print("please implement close wifi")
-    
-def FileCheckerLoop(StartTime,fileToCheck,deckNames,limit = 0,SleepTime = 3600):
+
+    if platform.system() == "Linux":
+        print("LINUX: turning wifi off")
+        os.system("/usr/bin/dbus-launch --exit-with-session /usr/bin/nmcli network off")
+        #print("please implement wifi checker for linux")
+    else:
+        print("WINDOWS: turning wifi off")
+        os.system(WINDOWS_CLOSE_WIFI_COMMAND)
+
+def EnableWIFI():
+    if platform.system() == "Linux":
+        print("LINUX: turning wifi on")
+        os.system("/usr/bin/dbus-launch --exit-with-session /usr/bin/nmcli network on")
+        #print("please implement wifi checker for linux")
+    else:
+        print("WINDOWS: turning wifi on")
+        os.system(WINDOWS_OPEN_WIFI_COMMAND)
+        
+def FileCheckerLoop(fileToCheck,deckNames,limit = 0,SleepTime = 3600):
 
     memory = {}
-    counts,nmemory = CheckFiles(fileToCheck)
+    counts,nmemory = CheckFiles(fileToCheck,deckNames,memory)
     memory = nmemory
     if counts > limit:
         CloseWIFI()
+    else:
+        EnableWIFI()
     
     while True:
         time.sleep(SleepTime)
 
-        counts, nmemory  = CheckFiles(LOCAL_COPY,deckNames,memory)
+        counts, nmemory  = CheckFiles(fileToCheck,deckNames,memory)
         memory = nmemory
         if counts > limit:
+            print("counts: %s" % counts)
             CloseWIFI()
+        else:
+            EnableWIFI()
 
 
 
-
+FileCheckerLoop(fileToCheck = TEST_FILETOCHECK, deckNames = TEST_DECKNAMES,limit = 0 ,SleepTime = 600)
+#ReadCollectionCounts(TEST_FILETOCHECK,TEST_DECKNAMES)

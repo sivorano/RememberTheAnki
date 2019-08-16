@@ -132,6 +132,7 @@ def ReadCollectionCounts(path,deckName):
             WHERE due < :today 
             AND did = :id
             AND reps != 0
+            AND queue >= 0
             """ % (), today = stat.col.sched.today, id = deckId)
         #stat.col.db.all(""" PRAGMA table_info(cards);""")
         print("%s - %s" % (len(cardsRes),name))

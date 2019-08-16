@@ -22,8 +22,6 @@ import hashlib
 BUFFER_SIZE = 1024
 
 #The files from which the deamon will take its input and write its output
-SUB_INPUT_FILE = "RememberTheAnkiFiles/Input"
-SUB_OUTPUT_FILΕ = "RememberTheAnkiFiles/Output"
 LOCAL_COPY = "RTA_COL_COPY.anki2"
 LOCAL_COPY_ROOT = "RTA_COL_COPY"
 #TEST_DECKNAMES = ["日本語::My true immersion deck"]
@@ -32,69 +30,6 @@ TEST_FILETOCHECK = "/home/anders/.local/share/Anki2/User 1/collection.anki2"
 WINDOWS_CLOSE_WIFI_COMMAND = "netsh interface set interface Wi-Fi disable"
 WINDOWS_OPEN_WIFI_COMMAND = "netsh interface set interface Wi-Fi enable"
 
-
-def RecieveStdInInput():
-    """
-    Check if there is input from StdIn. Returns this input as an list.
-    """
-    args = []
-    return sys.argv
-
-def WriteToDaemon(ToWrite):
-    """
-    Writes ToWrite to the Deamons input file.
-    """
-    deamonIn = open(SUB_INPUT_FILE,"w")
-    deamonIn.write(ToWrite)
-    deamonIn.close()
-    return 1
-
-def WriteFromDaemon(ToWrite, brute = True):
-    """
-    Writes ToWrite from the Deamon to StdOut.
-    """
-    if brute:
-        with open(SUB_OUTPUT_FILΕ,"w") as daemonOut:
-            daemonOut.write(ToWrite)
-    else:
-        print(ToWrite,flush = True)
-    return 1
-
-
-def ReadLineFromFile(InFile):
-    """
-    Reads one line from the demons, and removes this line
-    """
-    with open(InFile,"r") as deamonIn:
-        lines = deamonIn.readlines()
-    with open(InFile, 'w') as deamonIn:
-        if len(lines) > 0:
-            deamonIn.writelines(lines[1:])
-            return lines[0].rstrip()
-        else:
-            deamonIn.writelines([""])
-    raise Exception("No lines to read")
-
-def ReadLineFromDaemon(ToWrite,Trytime = 10):
-    """
-    """
-    Read = ""
-    ReadSomething = False
-    def readThreadFun():
-        """
-        Tries to read from stdin.
-        """
-        temp = sys.stdin.readline()
-        Read = temp
-        ReadSomething = True
-    
-    readProcess = multiprocessing.Process(target = readThreadFun)
-    readProcess.start()
-    time.sleep(Trytime)
-    readProcess.terminate()
-    return (Read,ReadSomething)
-
-    
 
 
 def hashCalculator(filename):

@@ -22,10 +22,11 @@ from datetime import date
 
 
 #The files from which the deamon will take its input and write its output
+CONFIG_FILE_NAME = "RTA_CONFIG.txt"
 LOCAL_COPY = "RTA_COL_COPY.anki2"
 LOCAL_COPY_ROOT = "RTA_COL_COPY"
 #TEST_DECKNAMES = ["日本語::My true immersion deck"]
-TEST_DECKNAMES = "日本語"
+TEST_DECKNAMES = ["日本語","Speciale"]
 TEST_FILETOCHECK = "/home/anders/.local/share/Anki2/User 1/collection.anki2"
 WINDOWS_CLOSE_WIFI_COMMAND = "netsh interface set interface Wi-Fi disable"
 WINDOWS_OPEN_WIFI_COMMAND = "netsh interface set interface Wi-Fi enable"
@@ -166,6 +167,6 @@ def FileCheckerLoop(fileToCheck,deckNames,limit = 0,SleepTime = 3600):
 
 log = open(LOGFILE, "a+")
 
-FileCheckerLoop(fileToCheck = TEST_FILETOCHECK, deckNames = TEST_DECKNAMES,limit = 200 ,SleepTime = 120)
+FileCheckerLoop(fileToCheck = TEST_FILETOCHECK, deckNames = TEST_DECKNAMES,limit = 140 ,SleepTime = 10)
 #ReadCollectionCounts(TEST_FILETOCHECK,TEST_DECKNAMES)
 log.close()
